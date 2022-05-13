@@ -1,4 +1,4 @@
-def mcserver(ip,mode='interenet',more='null'):
+def mcserver(ip,messages,mode='interenet',more='null'):
     from mcstatus import MinecraftServer
 
     server = MinecraftServer.lookup(ip)
@@ -8,13 +8,13 @@ def mcserver(ip,mode='interenet',more='null'):
             latency = server.ping()
             query = server.query()
 
-            mes = "服务器 {0} 玩家在线，本地连接耗时 {1} ms".format(status.players.online, status.latency)+"\n服务器本地响应时间 {0} ms".format(latency)+"\n在线玩家：{0}".format(", ".join(query.players.names))
+            mes = messages["服务器_本地_连接"].format(status.players.online, status.latency,latency,", ".join(query.players.names))
             return mes
         if mode == "interenet":
             status = server.status()
             if more == "local":
-                return "公网连接耗时 {0} ms".format(status.latency)
+                return messages["服务器_本地_测试"].format(status.latency)
             else:
-                return "服务器 {0} 玩家在线，连接耗时 {1} ms".format(status.players.online, status.latency)
+                return messages["服务器_网络_测试"].format(status.players.online, status.latency)
     except IOError:
-        return "服务器似乎未正常启动！"
+        return messages["服务器_error"]

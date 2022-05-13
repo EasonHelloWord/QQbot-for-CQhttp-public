@@ -1,8 +1,11 @@
-def beiwangluread(type,uid):
-    import os
+from email import message
+import os
+if not os.path.exists("备忘录"):#如果没有地址则创建
+    os.mkdir("备忘录")
+
+
+def beiwangluread(type,uid,messages):
     uid = str(uid)
-    if not os.path.exists("备忘录"):#如果没有地址则创建
-        os.mkdir("备忘录")
     os.chdir("备忘录")
     try:
         if type == 'private':
@@ -26,16 +29,13 @@ def beiwangluread(type,uid):
             os.chdir("..")
             return data
 
-    except IOError:
+    except:
         os.chdir("..")
-        return("您还没有过备忘录哦！使用帮助输入《备忘录help》")
+        return(messages["备忘录_文件_error"])
 
 
 
-def beiwangluadd(type,uid,user,mes):
-    import os
-    if not os.path.exists("备忘录"):#如果没有地址则创建
-        os.mkdir("备忘录")
+def beiwangluadd(type,uid,user,mes,messages):
     os.chdir("备忘录")
     uid,user = str(uid),"、"+str(user)+":"
     mes = mes.replace("\r\n", "%0a")
@@ -46,13 +46,10 @@ def beiwangluadd(type,uid,user,mes):
         f.write(user+mes+"\n")
     f.close
     os.chdir("..")
-    return "保存成功，通过：《备忘录》查看哦！"
+    return messages["备忘录_保存"]
 
-def beiwangludel(type,linest,uid):
-    import os
+def beiwangludel(type,linest,uid,messages,user,owner):
     uid = str(uid)
-    if not os.path.exists("备忘录"):#如果没有地址则创建
-        os.mkdir("备忘录")
     os.chdir("备忘录")
     try:
         if type == 'private':
@@ -73,10 +70,17 @@ def beiwangludel(type,linest,uid):
         if type == 'group':
             data = ""
             count = 1
+            user_leng = len(str(user))
             with open(uid+".txt", 'r',encoding='utf-8') as f:
                 for line in f:
                     if count == linest:
-                        print("",end="")
+                        if str(line[1:user_leng+1]) == str(user):
+                            print("",end="")
+                        elif str(user) == str(owner):
+                            print("",end="")
+                        else:
+                            os.chdir("..")
+                            return(messages["备忘录_!owner"])
                     else:
                         data = data + line
                     count = count+1
@@ -84,7 +88,7 @@ def beiwangludel(type,linest,uid):
             with open(uid+".txt", 'w',encoding='utf-8') as f:
                 f.write(data)
         os.chdir("..")
-        return "操作成功！"
-    except IOError:
+        return messages["备忘录_删除"]
+    except:
         os.chdir("..")
-        return("您似乎还没有过备忘录！使用帮助输入《备忘录help》")
+        return(messages["备忘录_文件_error"])

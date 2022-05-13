@@ -1,4 +1,4 @@
-def musicApi():
+def musicApi(messages):
     import json
     import requests
     r = requests.get('http://api.wpbom.com/api/neran.php')
@@ -8,7 +8,7 @@ def musicApi():
     type = 'custom'
     url = ku['musicUrl']
     audio = url
-    title = "音乐来喽~~~"
-    content = '点击下载哦\n'+ku['title']+"   ---"+ku['desc']
+    title = messages["音乐_来了"]
+    content = messages["音乐_下载"].format(ku['title'],ku['desc'])
     image = ku['preview']
     return('[CQ:music,'+'type='+type+',url='+url+',audio='+audio+',title='+title+',content='+content+',image='+image+']')

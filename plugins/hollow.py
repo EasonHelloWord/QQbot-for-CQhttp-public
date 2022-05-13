@@ -1,22 +1,23 @@
-def hollow(msg):
+import os
+if not os.path.exists("树洞"):#如果没有地址则创建
+    os.mkdir("树洞")
+
+def hollow(msg,messages):
     msg = msg.replace("\r\n", "\r")
-    import os
     import time
-    if not os.path.exists("树洞"):#如果没有地址则创建
-        os.mkdir("树洞")
     os.chdir("树洞")
     name = time.strftime("%Y-%m-%d.%H-%M-%S.txt")
     with open(str(name),"a",encoding='utf-8') as f:
         f.write(msg)
     f.close
     os.chdir('..')
-    re = readfile('树洞')
-    return("内容保存成功，不会记录您的信息哦~\n"+re)
+    re = readfile(messages)
+    return(messages["树洞_保存"]+re)
 
-def readfile(filedata):
+def readfile(messages):
     import os
     import random
-    file_name_list = os.listdir(filedata)
+    file_name_list = os.listdir('树洞')
 
     # 转为转为字符串
     file_name = str(file_name_list)
@@ -29,4 +30,4 @@ def readfile(filedata):
     data = f.read()
     f.close
     os.chdir('..')
-    return "来自时间："+filename[:-4]+"的树洞：\n"+data
+    return messages["树洞_回复"].format(filename[:-4],data)
