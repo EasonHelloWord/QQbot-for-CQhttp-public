@@ -1,6 +1,7 @@
 from plugins.answer import *
 from plugins.beiwanglu import *
 from plugins.box import *
+from plugins.config import *
 from plugins.erciyuan import *
 from plugins.haogan import *
 from plugins.hollow import *
@@ -39,13 +40,18 @@ def post_data():
             uid = request.get_json().get('group_id')  # 获取群号
             user = request.get_json().get('sender').get('user_id')  # 获取信息发送者的 QQ号码
             send2(message, uid,user,type)
+
+
     if request.get_json().get('notice_type') == 'group_recall':
-        recall_user_id = request.get_json().get('user_id')
-        recall_operator_id = request.get_json().get('operator_id')
-        recall_message_id = request.get_json().get('message_id')
+        import json
         recall_group_id = request.get_json().get('group_id')
-        recall_data = [recall_user_id,recall_operator_id,recall_message_id,recall_group_id]
-        group_recall(recall_data)
+        choose = json.loads(config_read('group',recall_group_id))['un_recall']
+        if choose == 'true':
+            recall_user_id = request.get_json().get('user_id')
+            recall_operator_id = request.get_json().get('operator_id')
+            recall_message_id = request.get_json().get('message_id')
+            recall_data = [recall_user_id,recall_operator_id,recall_message_id,recall_group_id]
+            group_recall(recall_data)
 
     return "None"
 
@@ -105,6 +111,8 @@ def send(message, uid, user,type):
         cases = 20
     if message[:3] == "备忘录":
         cases = 21
+    if message[:2] == "配置":
+        cases = 22
     if message[0] == ".":
         cases = 'null'
 
@@ -208,14 +216,14 @@ def send(message, uid, user,type):
                 mesl = str(listl[3:])[2:-2]
                 mesl = mesl.replace("'",'')
                 send_msg(typel,uidl,messages["消息_收到"].format(owner,mesl))
-                send_msg(type,uid,message["消息_发送_success"])
+                send_msg(type,uid,messages["消息_发送_success"])
             else:
-                send_msg(type,uid,message["消息_发送_error"])
+                send_msg(type,uid,messages["消息_发送_error"])
 
 
         case 18:
             os.system('cls')
-            send_msg(type,uid ,message["缓存"])
+            send_msg(type,uid ,messages["缓存"])
 
 
 
@@ -231,8 +239,8 @@ def send(message, uid, user,type):
                 send_msg(type,uid,"创造"+mesf)
 
 
-                mes = mcserver("127.0.0.1:25566","local")
-                mes2 = mcserver(shencun,"interenet",'local')
+                mes = mcserver("127.0.0.1:25566",messages,"local")
+                mes2 = mcserver(shencun,messages,"interenet",'local')
                 mesf = str(mes)+"\n"+str(mes2)
                 send_msg(type,uid,"生存"+mesf)
 
@@ -245,11 +253,43 @@ def send(message, uid, user,type):
                 send_msg(type,uid ,mes)
             if message[3:5] == "启动":
                 if message[5:] == "创造":
-                    os.system("start chuangzao.bat")
-                    send_msg(type,uid,messages["服务器_创造_启动"])
+                    a = mcserver('127.0.0.1:25565',messages,mode='try',more='null')
+                    if a =="false":
+                            import time
+                            timeNow = time.time()
+                            try:
+                                lasttime = temp['chuangzao']
+                                if timeNow-lasttime >= 300:
+                                    temp['chuangzao'] = timeNow
+                                    os.system("start chuangzao.bat")
+                                    send_msg(type,uid,messages["服务器_创造_启动"])
+                                else:
+                                    send_msg(type,uid,messages["服务器_启动_过快"].format(int(30-timeNow+lasttime)))
+                            except:
+                                temp['chuangzao'] = timeNow
+                                os.system("start chuangzao.bat")
+                                send_msg(type,uid,messages["服务器_创造_启动"])
+                    else:
+                        send_msg(type,uid,messages["服务器_ready"])
                 if message[5:] == "生存":
-                    os.system("start shencun.bat")
-                    send_msg(type,uid,messages["服务器_生存_启动"])
+                    a = mcserver('127.0.0.1:25566',messages,mode='try',more='null')
+                    if a =="false":
+                        import time
+                        timeNow = time.time()
+                        try:
+                            lasttime = temp['shencun']
+                            if timeNow-lasttime >= 300:
+                                temp['shencun'] = timeNow
+                                os.system("start shencun.bat")
+                                send_msg(type,uid,messages["服务器_创造_启动"])
+                            else:
+                                send_msg(type,uid,messages["服务器_启动_过快"].format(int(30-timeNow+lasttime)))
+                        except:
+                            temp['shencun'] = timeNow
+                            os.system("start shencun.bat")
+                            send_msg(type,uid,messages["服务器_生存_启动"])
+                    else:
+                        send_msg(type,uid,messages["服务器_ready"])
 
         case 20:
             import random
@@ -274,9 +314,19 @@ def send(message, uid, user,type):
                 data = beiwangluadd(type,uid,user,mes,messages)
             send_msg(type,uid,data)
 
-
-
-
+        case 22:
+            data = message[2:]
+            if data == "":
+                send_msg(type,uid,messages["配置"])
+                send_msg(type,uid,messages["配置2"].format(config_read(type,uid)))
+            elif '*'in data:
+                key_locate=data.find('*')
+                name = data[:key_locate]
+                detail = data[key_locate+1:]
+                config_change(type,uid,name,detail)
+                send_msg(type,uid,messages["配置更改"].format(name,detail))
+            else:
+                send_msg(type,uid,messages["配置"])
         case _:
             msg = AISpeak(message,owner,uid,user,messages)
             send_msg(type,uid ,msg)

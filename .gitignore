@@ -6,8 +6,9 @@
 config.json
 message.json
 tools/
-plugins/__pycache__/
 意见箱/
+plugins/__pycache__/
+配置/
 read.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/

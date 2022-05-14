@@ -3,6 +3,13 @@ def mcserver(ip,messages,mode='interenet',more='null'):
 
     server = MinecraftServer.lookup(ip)
     try:
+        if mode == "try":
+            try:
+                status = server.status()
+                return "true"
+            except:
+                return"false"
+
         if mode == "local":
             status = server.status()
             latency = server.ping()
@@ -16,5 +23,5 @@ def mcserver(ip,messages,mode='interenet',more='null'):
                 return messages["服务器_本地_测试"].format(status.latency)
             else:
                 return messages["服务器_网络_测试"].format(status.players.online, status.latency)
-    except IOError:
+    except:
         return messages["服务器_error"]
