@@ -3,6 +3,7 @@ def send_msg(type,uid,messenge):
     import requests
     msg = messenge.replace(" ", "%20")
     msg = msg.replace("\n", "%0a")
+    msg = msg.replace("&#91;","[").replace("&#93;","]")
     if msg == "":
         msg = "空"
     if type == 'group':

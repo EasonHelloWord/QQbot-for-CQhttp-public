@@ -2,6 +2,7 @@ from plugins.answer import *
 from plugins.beiwanglu import *
 from plugins.box import *
 from plugins.config import *
+from plugins.dinshizhixing import *
 from plugins.erciyuan import *
 from plugins.haogan import *
 from plugins.hollow import *
@@ -20,6 +21,8 @@ app = Flask(__name__)
 
 @app.route('/', methods=["POST"])
 def post_data():
+    dinshixiaoxi(temp,config,messages)
+    # print(request.get_json())
     if request.get_json().get('message_type') == 'private':  # 私聊信息
         type = 'private'
         uid = request.get_json().get('sender').get('user_id')  # 获取信息发送者的 QQ号码
@@ -53,7 +56,7 @@ def post_data():
             recall_data = [recall_user_id,recall_operator_id,recall_message_id,recall_group_id]
             group_recall(recall_data)
 
-    return "None"
+    return "你好"
 
 def group_recall(recall_data):
     recall_message = messageId(recall_data[2])
@@ -81,6 +84,9 @@ def send(message, uid, user,type):
     if message[0] == '说':
         cases = 5
 
+    if message == '初始化':
+        cases = 6
+
 
 
     if '夸我' in message:
@@ -93,6 +99,9 @@ def send(message, uid, user,type):
         cases = 11
     if message[0:2] == '树洞':
         cases = 12
+
+    if message[0:4] == '定时消息':
+        cases = 13
 
 
 
@@ -126,7 +135,7 @@ def send(message, uid, user,type):
         case 2:
             send_msg(type,uid,messages["简介"])
         case 3:
-            send_msg(type,uid,messages["？"].format(dic["KeyWorld"]))
+            send_msg(type,uid,messages["？"].format(config["KeyWorld"]))
 
 
 
@@ -145,7 +154,10 @@ def send(message, uid, user,type):
             else:
                 send_msg(type,uid,'[CQ:tts,text='+msg+']')
 
-
+        case 6:
+            os.system("cd /d "+config["path"])
+            chushihua()
+            send_msg(type,uid,messages["初始化"])
 
 
 
@@ -185,7 +197,8 @@ def send(message, uid, user,type):
                 send_msg(type,uid,msg)
                 haogan_add(user,0.5)
 
-
+        case 13:
+            send_msg(type,uid,messages["定时消息_help"])
 
         case 15:
             msg = erciyuan(messages)
@@ -200,7 +213,7 @@ def send(message, uid, user,type):
             number = int(message[3:6])
             sends = message[7:]
             if number > 300:
-                send_msg(type,uid,message["刷屏_error"])
+                send_msg(type,uid,messages["刷屏_error"])
             else:
                 for x in range(number):
                     send_msg(type,uid,sends)
@@ -232,7 +245,7 @@ def send(message, uid, user,type):
                 mes = messages["服务器_help"]
                 send_msg(type,uid ,mes)
             if message[3:] == "all":
-                chuangzao,shencun = str(dic["chuangzao"]),str(dic["shencun"])
+                chuangzao,shencun = str(config["chuangzao"]),str(config["shencun"])
                 mes = mcserver("127.0.0.1:25565",messages,"local")
                 mes2 = mcserver(chuangzao,messages,"interenet",'local')
                 mesf = str(mes)+"\n"+str(mes2)
@@ -337,6 +350,8 @@ def send2(message, uid, user,type):
     cases = '_'
     if message == 'qwq':
         cases = 1
+    if  "type=flash" in message:
+        cases = 2
 
     match cases:
         case 1:
@@ -344,7 +359,16 @@ def send2(message, uid, user,type):
             num = random.randint(0,2)
             if num == 1:
                 send_msg(type,uid,"qwq")
+        case 2:
+            try:
+                choose = json.loads(config_read('group',uid))['flash_image']
+                if choose == "true":
+                    re=message.replace("[","").replace("]","")
+                    re = re.split(',')
+                    res = "["+re[0]+","+re[1]+"]"
+                    send_msg(type,uid,messages["收到闪照"]+res)
 
+            except:pass
 
 
 
@@ -352,9 +376,18 @@ def send2(message, uid, user,type):
 
 
 def chushihua():
-    import os,json,time
+    import os,json,time,socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect(("127.0.0.1", int(5701)))
+        s.settimeout(1)
+        s.shutdown(2)
+        print("占用")
+        zhanyong = 'true'
+    except:
+        print("无")
     if not os.path.exists('config.json'):
-        basic = {"owner":123123123,"shencun":"www.www.cn","chuangzao":"www.www.cn","KeyWorld":"."}
+        basic = {"owner":123123123,"shencun":"www.www.cn","chuangzao":"www.www.cn","KeyWorld":".","path":"C:/asdasdasdasd/sadasdasd"}
         json.dump(basic,open('config.json','w'),indent=4)
         time.sleep(0.1)
         print("配置文件生成完毕，请前往'config.json'完成设置~")
@@ -411,7 +444,9 @@ def chushihua():
         json.dump(basic,open('message.json','w',encoding='utf-8'),indent=4,ensure_ascii=False)
         time.sleep(0.1)
     global temp
-    temp = {}
+    temp = {
+        "LaunchNotification":"false"
+    }
 
 if __name__ == '__main__':
     import json
@@ -420,7 +455,7 @@ if __name__ == '__main__':
     f = open('config.json')
     js = f.read()
     f.close
-    dic = json.loads(js)
+    config = json.loads(js)
 
 
     f = open('message.json',encoding='utf-8')
@@ -428,8 +463,7 @@ if __name__ == '__main__':
     f.close
     messages = json.loads(messages)
 
-    owner = str(dic["owner"])
-    KeyWorld = dic['KeyWorld']
+    owner = str(config["owner"])
+    KeyWorld = config['KeyWorld']
     KeyWorld_Length = len(KeyWorld)
     app.run(debug=True, host='127.0.0.1', port=5701)  # 此处的 host和 port对应上面 yml文件的设置
-

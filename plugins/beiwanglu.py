@@ -1,4 +1,3 @@
-from email import message
 import os
 if not os.path.exists("备忘录"):#如果没有地址则创建
     os.mkdir("备忘录")
